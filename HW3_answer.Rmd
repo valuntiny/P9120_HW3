@@ -1,0 +1,56 @@
+---
+title: "P9120 HW3 answer"
+author: "Guojing Wu | UNI: gw2383"
+date: "10/27/2019"
+output:
+    pdf_document:
+    highlight: default
+    number_sections: true
+    citation_package:
+    keep_tex: false
+    fig_caption: true
+    latex_engine: pdflatex
+fontsize: 10pt
+geometry: margin=1in
+bibliography:
+biblio-style:
+header-includes:
+- \usepackage{indentfirst}
+- \usepackage{graphicx}
+- \usepackage{geometry}
+- \usepackage{subfigure}
+- \usepackage{amsmath}
+- \usepackage{listings}
+- \usepackage{tikz}
+- \usetikzlibrary{matrix}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, comment = "")
+library(tidyverse)
+```
+
+## 1. Suppose $X \in \mathbb{R}^p$ and $Y \in {-1, 1}$. For any real-valued function f on $\mathbb{R}^p$, let L(Y,f(X)) denote the loss function for measuring errors between Y and f(X). Let $f^* = argmin_{f}EL(Y, f(X))$, where the expectation is taken over the joint distribution of X and Y. Show that:
+
+### (a) (Logistic Regression) If $L(y, f(x)) = log[1 + exp(-yf(x))]$, then $f^*(x) = log \frac{Pr(Y=1|  X=x)} {Pr(Y=-1 | X=x)}$.
+
+
+### (b) (SVM) If $L(y, f(x)) = [1 - yf(x)]_+$, then $f^*(x) = sign[Pr(Y=1 | X=x) - \frac{1}{2}]$.
+
+### (c) (Regression) If $L(y, f(x)) = [y - f(x)]^2$, then $f^*(x) = 2Pr(Y=1 | X=x) - 1$.
+
+### (d) (AdaBoost) If $L(y, f(x)) = exp[-yf(x)]$, then $f^*(x) = \frac{1}{2} log \frac{Pr(Y=1|  X=x)} {Pr(Y=-1 | X=x)}$.
+
+## 2. Get the “Ripleydataset” (synth.tr) from the website http://www.stats.ox.ac.uk/pub/PRNN/. The dataset contains two predictors and a binary outcome.
+
+### (a) Construct a linear support vector classifier.
+
+### (b) Construct a support vector classifier with Radial kernel.
+
+### (c) Construct a classifier using AdaBoost algorithm (with 50 boosting iterations) with decision stumps as weak learners.
+
+## Select the tuning parameter involved in SVM models appropriately. For each method, compute the test error and its standard error on the test set (synth.te). Provide a simple graphical visualization of the produced classification models (i.e. something similar to Figure 2.2 in the textbook [ESL]) and discuss your results.
+
+## Appendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
