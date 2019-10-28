@@ -34,12 +34,92 @@ library(tidyverse)
 
 ### (a) (Logistic Regression) If $L(y, f(x)) = log[1 + exp(-yf(x))]$, then $f^*(x) = log \frac{Pr(Y=1|  X=x)} {Pr(Y=-1 | X=x)}$.
 
+In general, the goal of this learning problem is to minimize the expected risk: $EL(Y, f(X)) = \int_{X\times Y} L(y, f(x))Pr(x, y)dxdy$, where $Pr(x, y) = Pr(y|x)Pr(x)$ and $L(y, f(x)) = \phi(yf(x))$, so we can rewrite the expected risk as:
 
-### (b) (SVM) If $L(y, f(x)) = [1 - yf(x)]_+$, then $f^*(x) = sign[Pr(Y=1 | X=x) - \frac{1}{2}]$.
+$$
+\begin{split}
+EL(Y, f(X)) &= \int_{X\times Y} L(y, f(x))Pr(x, y)dxdy \\
+&= \int_{X} \int_{Y} \phi(yf(x))Pr(y|x)Pr(x)dxdy \\
+&= \int_{X} [\phi(f(x))Pr(1|x) + \phi(-f(x))Pr(-1|x)] Pr(x)dx \\
+&= \int_{X} [\phi(f(x))Pr(1|x) + \phi(-f(x))(1-Pr(1|x))] Pr(x)dx \\
+\end{split}
+$$
+
+Here we set $\eta = Pr(1|x)$, and by taking the functional derivative of the term $[\phi(f(x))Pr(1|x) + \phi(-f(x))(1-Pr(1|x))]$ with respect to $f$ and setting the derivative equal to 0 we get:
+
+$$
+\frac{\partial \phi(f)}{\partial f}\eta + \frac{\partial \phi(-f)}{\partial f}(1-\eta) = 0
+\tag{1}
+$$
+
+For question (a), the $\phi(yf(x)) = log[1 + exp(-yf(x))]$, hence $\phi(f) = log[1 + exp(-f)]$, solving equation (1) we get: 
+
+$$
+\begin{split}
+\frac{-e^{-f^*}}{1+e^{-f^*}}\eta + \frac{e^{f^*}}{1+e^{f^*}}(1-\eta) = 0 \\
+\frac{e^{f^*}}{1+e^{f^*}} = \eta \\
+f^* = log\frac{\eta}{1-\eta}
+\end{split}
+$$
+
+So the minimizer is $f^*(x) = log \frac{Pr(Y=1|  X=x)} {1 - Pr(Y=1 | X=x)} = log \frac{Pr(Y=1|  X=x)} { Pr(Y=-1 | X=x)}$.
+
+### (b) (SVM) If $L(y, f(x)) = [1 - yf(x)]_{+}$, then $f^*(x) = sign[Pr(Y=1 | X=x) - \frac{1}{2}]$.
+
+Take the derivative of $\phi(f) = [1 - f]_+$ and $\phi(-f) = [1 + f]_+$ we get:
+
+$$
+\phi'(f) = 
+\begin{cases}
+  -1, & f<1 \\
+  0, & f \geq 1
+\end{cases}
+$$
+
+$$
+\phi'(-f) = 
+\begin{cases}
+  1, & f>-1 \\
+  0, & f \leq -1
+\end{cases}
+$$
+
+We try to solve equation (1) under several cases:
+
+* when $-1 < f^* < 1$, we have $-\eta + 1 - \eta = 0$, so $\eta = \frac{1}{2}$, but the solution is undefined
+
+* when $f^* = -1$, we have $-\eta + 0 = 0$, so $\eta = 0$
+
+* when $f^* = 1$, we have $0 + 1 -\eta = 0$, so $\eta = 1$
+
+Combining all the cases above, we get $f^*(x) = sign[Pr(Y=1 | X=x) - \frac{1}{2}]$
 
 ### (c) (Regression) If $L(y, f(x)) = [y - f(x)]^2$, then $f^*(x) = 2Pr(Y=1 | X=x) - 1$.
 
+From text book, the squared error $[y - f(x)]^2 = [1 - yf(x)]^2$, so $\phi(f) = [1 - f]^2$. Solving equation (1) we get:
+
+$$
+\begin{split}
+-2(1 - f^*)\eta + 2(1+f^*)(1-\eta) = 0 \\
+f^* = 2\eta - 1
+\end{split}
+$$
+
+So the minimizer is $f^*(x) = 2Pr(Y=1 | X=x) - 1$.
+
 ### (d) (AdaBoost) If $L(y, f(x)) = exp[-yf(x)]$, then $f^*(x) = \frac{1}{2} log \frac{Pr(Y=1|  X=x)} {Pr(Y=-1 | X=x)}$.
+
+$\phi(f) = e^{-f}$. Solving equation (1) we get:
+
+$$
+\begin{split}
+-e^{-f^*}\eta + e^{f^*} (1-\eta) = 0 \\
+e^{2f^*}(1-\eta) = \eta \\
+f^* = \frac{1}{2}log\frac{\eta}{1-\eta}
+\end{split}
+$$
+
+So the minimizer is $f^*(x) = \frac{1}{2}log\frac{Pr(Y=1|  X=x)}{1-Pr(Y=1|  X=x)} = \frac{1}{2}log\frac{Pr(Y=1|  X=x)}{Pr(Y=-1|  X=x)}$.
 
 ## 2. Get the “Ripleydataset” (synth.tr) from the website http://www.stats.ox.ac.uk/pub/PRNN/. The dataset contains two predictors and a binary outcome.
 
