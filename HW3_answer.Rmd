@@ -2,14 +2,7 @@
 title: "P9120 HW3 answer"
 author: "Guojing Wu | UNI: gw2383"
 date: "10/27/2019"
-output:
-    pdf_document:
-    highlight: default
-    number_sections: true
-    citation_package:
-    keep_tex: false
-    fig_caption: true
-    latex_engine: pdflatex
+output: md_document
 fontsize: 10pt
 geometry: margin=1in
 bibliography:
@@ -28,6 +21,9 @@ header-includes:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, comment = "")
 library(tidyverse)
+library(e1071)  # for SVM
+library(JOUSBoost)  # for adaboost
+library(ada)
 ```
 
 ## 1. Suppose $X \in \mathbb{R}^p$ and $Y \in {-1, 1}$. For any real-valued function f on $\mathbb{R}^p$, let L(Y,f(X)) denote the loss function for measuring errors between Y and f(X). Let $f^* = argmin_{f}EL(Y, f(X))$, where the expectation is taken over the joint distribution of X and Y. Show that:
@@ -123,13 +119,87 @@ So the minimizer is $f^*(x) = \frac{1}{2}log\frac{Pr(Y=1|  X=x)}{1-Pr(Y=1|  X=x)
 
 ## 2. Get the “Ripleydataset” (synth.tr) from the website http://www.stats.ox.ac.uk/pub/PRNN/. The dataset contains two predictors and a binary outcome.
 
+```{r}
+# load train and test data
+train <- read.table("synth.tr", header = T) %>% 
+  as.tibble() %>% 
+  mutate(yc = as.factor(yc), 
+         xs = scale(xs), 
+         ys = scale(ys))
+
+test <- read.table("synth.te", header = T) %>% 
+  as.tibble() %>% 
+  mutate(yc = as.factor(yc), 
+         xs = scale(xs), 
+         ys = scale(ys))
+
+```
+
 ### (a) Construct a linear support vector classifier.
+
+```{r}
+# linear SVM
+svm.linear = svm(yc ~ ., data = train, type = 'C-classification', kernel = 'linear')
+pred.svm.linear = predict(svm.linear, test)
+
+err.svm.linear = sum((as.numeric(pred.svm.linear) - as.numeric(test$yc)) != 0) / length(test$yc)
+stderr.svm.linear = sqrt(var(as.numeric(pred.svm.linear) - as.numeric(test$yc)))
+plot(svm.linear, train)
+
+```
+
 
 ### (b) Construct a support vector classifier with Radial kernel.
 
+```{r}
+# radial SVM
+svm.radial = svm(yc ~ ., data = train, type = 'C-classification', kernel = 'radial')
+pred.svm.radial = predict(svm.radial, test)
+
+err.svm.radial = sum((as.numeric(pred.svm.radial) - as.numeric(test$yc)) != 0) / length(test$yc)
+stderr.svm.radial = sqrt(var(as.numeric(pred.svm.radial) - as.numeric(test$yc)))
+plot(svm.radial, train)
+
+```
+
+
 ### (c) Construct a classifier using AdaBoost algorithm (with 50 boosting iterations) with decision stumps as weak learners.
 
+```{r}
+# adaboost
+train.ada = train %>% 
+  mutate(yc = ifelse(yc == 1, 1, -1)) %>% 
+  as.matrix()
+test.ada = test %>% 
+  mutate(yc = ifelse(yc == 1, 1, -1)) %>% 
+  as.matrix()
+
+ada = adaboost(train.ada[,c(1,2)], train.ada[,3], tree_depth = 1, n_rounds = 50)
+pred.ada = predict(ada, test.ada[,c(1,2)])
+
+err.ada = sum((as.numeric(pred.ada) - as.numeric(test.ada[,3])) != 0) / length(test.ada[,3])
+stderr.ada = sqrt(var((as.numeric(pred.ada) - as.numeric(test.ada[,3]))/2))
+
+```
+
+
 ## Select the tuning parameter involved in SVM models appropriately. For each method, compute the test error and its standard error on the test set (synth.te). Provide a simple graphical visualization of the produced classification models (i.e. something similar to Figure 2.2 in the textbook [ESL]) and discuss your results.
+
+Since this is a classification problem, we use misclassification rate as the test error.
+
+```{r}
+# output test error and standard error
+err.output <- tibble(
+  svm.linear = c(err.svm.linear, stderr.svm.linear),
+  svm.raidal = c(err.svm.radial, stderr.svm.radial),
+  adaboost = c(err.ada, stderr.ada)
+)
+rownames(err.output) = c("misclassification rate", "standard error")
+err.output %>% knitr::kable()
+
+```
+
+The result shows that for the `synth` data, support vector classifier with Radial kernel has the best performance, while adaboost has the worst.
 
 ## Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
